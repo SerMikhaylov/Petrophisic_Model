@@ -1,15 +1,21 @@
-# This is a sample Python script.
-
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
 
 from PySide6 import QtWidgets, QtCore, QtGui
 from Pet_model_design import Ui_MainWindow
+from dataclasses import dataclass
 import re
 import openpyxl
 import glob
 import pandas as pd
 import os
+
+
+@dataclass()
+class Petrophisical_properties:
+    poro: float  # пористость
+    perm: float  # проницаемость
+    density: float  # плотность
+    warer_irr: float  # остаточная водонасыщенность
+
 
 class MainTestWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
@@ -17,33 +23,41 @@ class MainTestWindow(QtWidgets.QMainWindow):
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.file = file  # переменная, в которую записывается путь в открываемому файлу excel
 
-#         self.timer = Thread_1()
-#         self.timer.signal_1.connect(self.setLineEditText)
+        #         self.timer = Thread_1()
+        #         self.timer.signal_1.connect(self.setLineEditText)
 
-        self.ui.Open_File_Excel.clicked.connect(self.onPushButton_Open_File)
-        self.ui.Loading_FES.clicked.connect(self.onPushButton_Loading_FES)
+        self.ui.Open_File_Excel.clicked.connect(self.onPushButton_Open_File)  # Кнопка Открыть файл Excel
+        self.ui.Loading_FES.clicked.connect(self.onPushButton_Loading_FES)  # Кнопка Загрузка ФЕС
 
-
+    # функция для выбора файла excel и предварительного просмотра
     def onPushButton_Open_File(self):
+        # выбор файла
         file_new = QtWidgets.QFileDialog.getOpenFileUrl(self, "Выберите файл")
+        # преобразование пути к файлу в строковый вид
         file_str = str(file_new)
+        # удаление лишних символов с помощью регулярных выражений
         regex = r'(\/\w+\S+[xlsx])'
         matches = str(re.findall(regex, file_str))
-        file = matches[2:(len(matches)-2)]
-        wb = openpyxl.load_workbook(filename = file)
+        # итоговый путь к файлу
+        file = matches[2:(len(matches) - 2)]
+        wb = openpyxl.load_workbook(filename=file)
+        # выбор листа файла excel
         sheet = wb['Core_FES']
+        # считывание содержимого excel-файла
         text_exel = ""
         for row in sheet.values:
             text_exel += str(row) + "" + "\n"
+        # вывод информации в TextBrowser
         self.ui.Preview_Data.append(text_exel)
 
+    # Функция для загрузки ФЕС, т.е. подготовки данных excel для построения графиков
     def onPushButton_Loading_FES(self):
+        # Load spreadsheet
+        xl = pd.ExcelFile(file)
         # Загрузим exel-лист в DataFrame под именем: df1
-        # df1 = xl.parse('Core_FES')
-        # for n in xl:
-        #     self.ui.textEdit.append(str(n))
-        # self.ui.Preview_Data.append(str(file))
+        df1 = xl.parse('Core_FES')
 
 
 # Press the green button in the gutter to run the script.

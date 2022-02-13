@@ -9,12 +9,21 @@ import pandas as pd
 import os
 
 
-@dataclass()
+@dataclass
 class Petrophisical_properties:
     poro: float  # пористость
     perm: float  # проницаемость
     density: float  # плотность
     warer_irr: float  # остаточная водонасыщенность
+
+@dataclass
+class File_directory:
+    file_directory: str  # переменная, в которую записывается путь в открываемому файлу excel
+
+class Chart:
+    def __init__(self, width, height, x_min, x_max, y_min, y_max):
+        self.width = width  # ширина графика
+        self.height = height    # высота графика
 
 
 class MainTestWindow(QtWidgets.QMainWindow):
@@ -23,13 +32,12 @@ class MainTestWindow(QtWidgets.QMainWindow):
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.file = file  # переменная, в которую записывается путь в открываемому файлу excel
 
         #         self.timer = Thread_1()
         #         self.timer.signal_1.connect(self.setLineEditText)
 
         self.ui.Open_File_Excel.clicked.connect(self.onPushButton_Open_File)  # Кнопка Открыть файл Excel
-        self.ui.Loading_FES.clicked.connect(self.onPushButton_Loading_FES)  # Кнопка Загрузка ФЕС
+        # self.ui.Loading_FES.clicked.connect(self.onPushButton_Loading_FES)  # Кнопка Загрузка ФЕС
 
     # функция для выбора файла excel и предварительного просмотра
     def onPushButton_Open_File(self):
@@ -42,7 +50,8 @@ class MainTestWindow(QtWidgets.QMainWindow):
         matches = str(re.findall(regex, file_str))
         # итоговый путь к файлу
         file = matches[2:(len(matches) - 2)]
-        wb = openpyxl.load_workbook(filename=file)
+        file_directory = File_directory(file)
+        wb = openpyxl.load_workbook(filename=file_directory.file_directory)
         # выбор листа файла excel
         sheet = wb['Core_FES']
         # считывание содержимого excel-файла
@@ -53,11 +62,11 @@ class MainTestWindow(QtWidgets.QMainWindow):
         self.ui.Preview_Data.append(text_exel)
 
     # Функция для загрузки ФЕС, т.е. подготовки данных excel для построения графиков
-    def onPushButton_Loading_FES(self):
-        # Load spreadsheet
-        xl = pd.ExcelFile(file)
-        # Загрузим exel-лист в DataFrame под именем: df1
-        df1 = xl.parse('Core_FES')
+    # def onPushButton_Loading_FES(self):
+    #     # Load spreadsheet
+    #     xl = pd.ExcelFile(self.file)
+    #     # Загрузим exel-лист в DataFrame под именем: df1
+    #     df1 = xl.parse('Core_FES')
 
 
 # Press the green button in the gutter to run the script.

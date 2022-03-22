@@ -8,6 +8,7 @@ import pandas as pd
 import itertools
 from Podbor_koef import Koef_fes, calk_function_perm, calk_function_density
 from threads.xslx_read import XSLXReader
+from threads.Koef_Perm_Poro import Koef_Perm_Poro_Thread
 
 
 class MainTestWindow(QtWidgets.QMainWindow):
@@ -28,11 +29,16 @@ class MainTestWindow(QtWidgets.QMainWindow):
 
         # init threads
         self.xlsx_reader_thread = XSLXReader()
+        self.koef_Perm_Poro_thread = Koef_Perm_Poro_Thread()
 
         # threads events
         self.xlsx_reader_thread.started.connect(self.XLSXReadThreadStarted)
         self.xlsx_reader_thread.finished.connect(lambda: self.setEnabled(True))
         self.xlsx_reader_thread.XLSXReaderSignal.connect(lambda text: self.ui.Preview_Data.setText(text))
+
+        self.koef_Perm_Poro_thread.started.connect(lambda: self.ui.View_Koef_Relation_Perm_Poro.setEnabled(False))
+        self.koef_Perm_Poro_thread.finished.connect(lambda: self.ui.View_Koef_Relation_Perm_Poro.setEnabled(True))
+        self.koef_Perm_Poro_thread.Koef_Perm_Poro_Signal.connect(self.koef_Perm_Poro_result)
 
         # Window dimensions
         geometry = self.screen().availableGeometry()
@@ -163,32 +169,41 @@ class MainTestWindow(QtWidgets.QMainWindow):
         self.ui.Relation_Density_Poro.setLayout(layout)
 
     def onPushButton_But_View_Koef_Perm_Poro(self):
-        self.koef_1 = Koef_fes(30, 0.001, 0.01)
-        self.koef_2 = Koef_fes(30, 2, 3)
-        self.koef_3 = Koef_fes(30, -1, 7)
+        self.koef_Perm_Poro_thread.setParameters(Koef_fes(30, 0.001, 0.01), Koef_fes(30, 2, 3), Koef_fes(30, -1, 7), self.porosity, self.permeability)
+        self.koef_Perm_Poro_thread.start()
+        # self.koef_1 = Koef_fes(30, 0.001, 0.01)
+        # self.koef_2 = Koef_fes(30, 2, 3)
+        # self.koef_3 = Koef_fes(30, -1, 7)
+        #
+        # nev_min = 1000000000
+        # gen = itertools.product(self.koef_1.var_koef_fes, self.koef_2.var_koef_fes, self.koef_3.var_koef_fes)
+        # proiz = self.koef_1.n_koef_fes * self.koef_2.n_koef_fes * self.koef_3.n_koef_fes
+        # for i in range(proiz):
+        #     g_ = next(gen)
+        #     koef_1_r = g_[0]
+        #     koef_2_r = g_[1]
+        #     koef_3_r = g_[2]
+        #
+        #     # Рассчитываем проницаемость
+        #     perm_calk = calk_function_perm(koef_1_r, koef_2_r, koef_3_r, self.porosity)
+        #     Raznica = perm_calk - self.permeability
+        #     modul = abs(Raznica)
+        #     summa = sum(modul)
+        #     nev_perm_calk = summa
+        #     if nev_perm_calk < nev_min:
+        #         self.koef_1.num_koef_fes = g_[0]
+        #         self.koef_2.num_koef_fes = g_[1]
+        #         self.koef_3.num_koef_fes = g_[2]
+        #         nev_min = nev_perm_calk
+        # self.ui.View_Koef_Relation_Perm_Poro.append(
+        #     f'Perm = exp({self.koef_1.num_koef_fes}*(Poro**{self.koef_2.num_koef_fes}) - {self.koef_3.num_koef_fes})')
 
-        nev_min = 1000000000
-        gen = itertools.product(self.koef_1.var_koef_fes, self.koef_2.var_koef_fes, self.koef_3.var_koef_fes)
-        proiz = self.koef_1.n_koef_fes * self.koef_2.n_koef_fes * self.koef_3.n_koef_fes
-        for i in range(proiz):
-            g_ = next(gen)
-            koef_1_r = g_[0]
-            koef_2_r = g_[1]
-            koef_3_r = g_[2]
+    def koef_Perm_Poro_result(self, result):
+        self.koef_1 = result["koef_1"]
+        self.koef_2 = result["koef_2"]
+        self.koef_3 = result["koef_3"]
+        self.ui.View_Koef_Relation_Perm_Poro.setText(result["log"])
 
-            # Рассчитываем проницаемость
-            perm_calk = calk_function_perm(koef_1_r, koef_2_r, koef_3_r, self.porosity)
-            Raznica = perm_calk - self.permeability
-            modul = abs(Raznica)
-            summa = sum(modul)
-            nev_perm_calk = summa
-            if nev_perm_calk < nev_min:
-                self.koef_1.num_koef_fes = g_[0]
-                self.koef_2.num_koef_fes = g_[1]
-                self.koef_3.num_koef_fes = g_[2]
-                nev_min = nev_perm_calk
-        self.ui.View_Koef_Relation_Perm_Poro.append(
-            f'Perm = exp({self.koef_1.num_koef_fes}*(Poro**{self.koef_2.num_koef_fes}) - {self.koef_3.num_koef_fes})')
 
     def onPushButton_But_View_Koef_Dens_Poro(self):
         self.koef_1 = Koef_fes(30, -1, 0)

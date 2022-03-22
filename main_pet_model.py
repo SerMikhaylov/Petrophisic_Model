@@ -30,9 +30,9 @@ class MainTestWindow(QtWidgets.QMainWindow):
         self.xlsx_reader_thread = XSLXReader()
 
         # threads events
-        self.xlsx_reader_thread.started.connect(lambda: self.setEnabled(False))
+        self.xlsx_reader_thread.started.connect(self.XLSXReadThreadStarted)
         self.xlsx_reader_thread.finished.connect(lambda: self.setEnabled(True))
-        self.xlsx_reader_thread.XLSXReaderSignal.connect(lambda text: self.ui.Preview_Data.append(text))
+        self.xlsx_reader_thread.XLSXReaderSignal.connect(lambda text: self.ui.Preview_Data.setText(text))
 
         # Window dimensions
         geometry = self.screen().availableGeometry()
@@ -48,6 +48,10 @@ class MainTestWindow(QtWidgets.QMainWindow):
             self.onPushButton_But_View_Koef_Perm_Poro)  # Кнопка показать коэф Perm=f(Poro)
         self.ui.But_View_Koef_Dens_Poro.clicked.connect(
             self.onPushButton_But_View_Koef_Dens_Poro)  # Кнопка показать коэф Dens=f(Poro)
+
+    def XLSXReadThreadStarted(self):
+        self.setEnabled(False)
+        self.ui.Preview_Data.setText("Идёт загрузка данных. Подождите...")
 
     # функция для выбора файла excel и предварительного просмотра
     def onPushButton_Open_File(self):

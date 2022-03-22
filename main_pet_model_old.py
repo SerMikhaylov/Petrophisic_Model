@@ -7,8 +7,6 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 import pandas as pd
 import itertools
 from Podbor_koef import Koef_fes, calk_function_perm, calk_function_density
-from threads.xslx_read import XSLXReader
-
 
 class MainTestWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
@@ -25,14 +23,6 @@ class MainTestWindow(QtWidgets.QMainWindow):
         self.num_perm = None
         self.num_wirr = None
         self.num_gis = None
-
-        # init threads
-        self.xlsx_reader_thread = XSLXReader()
-
-        # threads events
-        self.xlsx_reader_thread.started.connect(lambda: self.setEnabled(False))
-        self.xlsx_reader_thread.finished.connect(lambda: self.setEnabled(True))
-        self.xlsx_reader_thread.XLSXReaderSignal.connect(lambda text: self.ui.Preview_Data.append(text))
 
         # Window dimensions
         geometry = self.screen().availableGeometry()
@@ -52,28 +42,25 @@ class MainTestWindow(QtWidgets.QMainWindow):
     # функция для выбора файла excel и предварительного просмотра
     def onPushButton_Open_File(self):
         # выбор файла
-        file_new = QtWidgets.QFileDialog.getOpenFileName(self, "Выберите файл", filter="*.xlsx")[0]
+        file_new = QtWidgets.QFileDialog.getOpenFileName(self, "Выберите файл", filter="*.xlsx")
         # преобразование пути к файлу в строковый вид
 
-        if not file_new:
+        if not file_new[0]:
             return
 
-        self.ui.lineEditXlsxFile.setText(file_new)
-
-        self.xlsx_reader_thread.setFileName(file_new)
-        self.xlsx_reader_thread.start()
-
-        # wb = openpyxl.load_workbook(filename=file_str)
-        # xl = pd.ExcelFile(file_str)
-        # df_excel = xl.parse('Core_FES')
-        # # выбор листа файла excel
-        # sheet = wb['Core_FES']
-        # # считывание содержимого excel-файла
-        # text_exel = ""
-        # for row in sheet.values:
-        #     text_exel += str(row) + "" + "\n"
-        # # вывод информации в TextBrowser
-        # self.ui.Preview_Data.append(text_exel)
+        file_str = file_new[0]
+        self.ui.lineEditXlsxFile.setText(file_str)
+        wb = openpyxl.load_workbook(filename=file_str)
+        xl = pd.ExcelFile(file_str)
+        df_excel = xl.parse('Core_FES')
+        # выбор листа файла excel
+        sheet = wb['Core_FES']
+        # считывание содержимого excel-файла
+        text_exel = ""
+        for row in sheet.values:
+            text_exel += str(row) + "" + "\n"
+        # вывод информации в TextBrowser
+        self.ui.Preview_Data.append(text_exel)
 
     # Функция для загрузки ФЕС, т.е. подготовки данных excel для построения графиков
     def onPushButton_Loading_FES(self):
